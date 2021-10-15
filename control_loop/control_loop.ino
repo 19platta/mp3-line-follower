@@ -1,14 +1,24 @@
 #include <Adafruit_MotorShield.h>
 
+const int leftSensorPin = A0;
+const int rightSensorPin = A1;
+const int switchPin = 7;
+
+int leftSensor = 0;
+int rightSensor = 0;
+int deviation = 0;
+
+int baseSpeed = 25;
+int leftSpeed = 25;
+int rightSpeed = 25;
+
 // Create the motor shield object with the default I2C address
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
-// Or, create it with a different I2C address (say for stacking)
-// Adafruit_MotorShield AFMS = Adafruit_MotorShield(0x61);
 
 // Left motor 
-Adafruit_DCMotor *myMotor = AFMS.getMotor(1);
+Adafruit_DCMotor *leftMotor = AFMS.getMotor(1);
 // Right motor 
-Adafruit_DCMotor *myOtherMotor = AFMS.getMotor(3);
+Adafruit_DCMotor *rightMotor = AFMS.getMotor(3);
 
 void setup() {
   Serial.begin(9600);           // set up Serial library at 9600 bps
@@ -21,15 +31,40 @@ void setup() {
   }
   
   Serial.println("Motor Shield found.");
-
-  // Set the speed to start, from 0 (off) to 255 (max speed)
-  myMotor->setSpeed(150);
-  myMotor->run(FORWARD);
-  // turn on motor
-  myMotor->run(RELEASE);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  if (digitalRead(switchPin) == LOW) {
+    rightSpeed = 0;
+    leftSpeed = 0;
+  } else {
+    // get sensor input
+    leftSensor = analogRead(leftSensorPin);
+    rightSensor = analogRead(rightSensorPin);
+    
+    //compute deviation
+    deviation = rightSensor - leftSensor;
+    Serial.println(deviation);
+  
+    if (deviation > 0) {
+      leftSpeed = 30;
+    } else {
+      leftSpeed = baseSpeed;
+    }
+  
+    if (deviation < 0) {
+      rightSpeed = 30;
+    } else {
+      rightSpeed = baseSpeed;
+    }
+  }
+  rightMotor->setSpeed(rightSpeed);
+  rightMotor->run(BACKWARD);
+  //rightMotor->run(RELEASE);
+
+  leftMotor->setSpeed(leftSpeed);
+  leftMotor->run(FORWARD);
+  //leftMotor->run(RELEASE);
+  delay(100);
 
 }
