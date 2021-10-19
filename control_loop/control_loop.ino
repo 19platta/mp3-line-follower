@@ -7,10 +7,11 @@ const int switchPin = 7;
 int leftSensor = 0;
 int rightSensor = 0;
 int deviation = 0;
+const float kp = 0.3; // 0.3 works with baseSpeed 25
 
-int baseSpeed = 25;
-int leftSpeed = 25;
-int rightSpeed = 25;
+const int baseSpeed = 25; // 25, 20 works with 0.3 k
+int leftSpeed;
+int rightSpeed;
 
 // Create the motor shield object with the default I2C address
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
@@ -44,18 +45,15 @@ void loop() {
     
     //compute deviation
     deviation = rightSensor - leftSensor;
-    Serial.println(deviation);
+
   
-    if (deviation > 0) {
-      leftSpeed = 30;
-    } else {
-      leftSpeed = baseSpeed;
-    }
-  
-    if (deviation < 0) {
-      rightSpeed = 30;
+    if (abs(deviation) >= 10) {
+      leftSpeed = baseSpeed + kp * deviation;
+      rightSpeed = baseSpeed - kp * deviation;
+      Serial.println(leftSpeed, rightSpeed); 
     } else {
       rightSpeed = baseSpeed;
+      leftSpeed = baseSpeed;
     }
   }
   rightMotor->setSpeed(rightSpeed);
